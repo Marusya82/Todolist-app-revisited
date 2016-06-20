@@ -11,8 +11,16 @@
     <string name="action_delete">Delete</string>
     <string name="action_back">Go back</string>
     <string name="task_name">Task name</string>
-    <string name="task_date">Task date</string>
+    <string name="task_date">Due date</string>
     <string name="task_description">Task description</string>
     <string name="task_priority">Task priority</string>
+    <string name="input_task_name">Input task name</string>
+    <string name="input_task_priority">Input task priority</string>
+
+    <string-array name="priorities_array">
+        <item>HIGH</item>
+        <item>MEDIUM</item>
+        <item>LOW</item>
+    </string-array>
 
 </resources>

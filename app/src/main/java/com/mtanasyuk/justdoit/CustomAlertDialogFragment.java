@@ -40,7 +40,6 @@ public class CustomAlertDialogFragment extends DialogFragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 listener.onOKButton();
-                // TO-DO: add functionality for delete button
                 dialog.dismiss();
             }
         });

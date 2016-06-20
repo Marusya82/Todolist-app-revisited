@@ -9,25 +9,20 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
-    // create list of tasks
-    ArrayList<String> tasks;
+    // create list of tasks that is going to store results of database query
+    ArrayList<Task> tasks;
 
-    // an adapter allows displaying the contents of an ArrayList within a ListView
-    ArrayAdapter<String> tasksAdapter;
+    // custom adapter allows displaying the contents of an ArrayList within a ListView with other fields
+    CustomTasksAdapter tasksAdapter;
 
     ListView lvTasks;
-//    EditText etNewTask;
 
     // set REQUEST_CODE to any value, used to determine the result type later
     private final int REQUEST_CODE = 20;
@@ -38,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
     // boolean to separate create and save actions
     boolean create;
 
+    // database instance
+    TasksDatabaseHelper helper;
+
+    Task taskInit;
+    Long taskInitId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,20 +48,22 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
-        // get a handle to ListView
+        // get db instance and construct the data source
+        helper = TasksDatabaseHelper.getInstance(this);
+        tasks = helper.getAllTasks();
+
+        // sort all tasks based on its priority
+        Collections.sort(tasks, new CustomComparator());
+
+        // Create a custom adapter to convert the array to views
+        tasksAdapter = new CustomTasksAdapter(this, tasks);
         lvTasks = (ListView) findViewById(R.id.lvTasks);
-
-        // read tasks from a file
-        readTasks();
-
-        tasksAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, tasks);
-        lvTasks.setAdapter(tasksAdapter);
+        if (lvTasks != null) {
+            lvTasks.setAdapter(tasksAdapter);
+        }
 
         // set up list view listener to remove items
         setupListViewListener();
-
-        // get database instance
-        TasksDatabaseHelper helper = TasksDatabaseHelper.getInstance(this);
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -75,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.action_add:
                 // user chose 'add' button, create new task out of empty string, update file
                 Intent i = new Intent(MainActivity.this, EditTaskActivity.class);
-                i.putExtra("taskContent", "");
+                i.putExtra("task", new Task());
                 // set create to true since we are creating a new task
                 create = true;
                 startActivityForResult(i, REQUEST_CODE);
@@ -88,26 +91,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void readTasks() {
-        File filesDir = getFilesDir();
-        File justdoitFile = new File(filesDir, "justdoit.txt");
-        try {
-            tasks = new ArrayList<>(FileUtils.readLines(justdoitFile));
-        } catch (IOException e) {
-            tasks = new ArrayList<>();
-        }
-    }
-
-    private void writeTasks() {
-        File filesDir = getFilesDir();
-        File justdoitFile = new File(filesDir, "justdoit.txt");
-        try {
-            FileUtils.writeLines(justdoitFile, tasks);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     // bring up a clicked task to edit
     private void setupListViewListener() {
         lvTasks.setOnItemClickListener(
@@ -116,8 +99,9 @@ public class MainActivity extends AppCompatActivity {
                     public void onItemClick(AdapterView<?> adapter, View task, int pos, long id) {
                         Intent i = new Intent(MainActivity.this, EditTaskActivity.class);
                         position = pos;
-                        String taskContent = tasks.get(position);
-                        i.putExtra("taskContent", taskContent);
+                        taskInit = tasks.get(position);
+                        taskInitId = helper.findTask(taskInit);
+                        i.putExtra("task", taskInit);
                         startActivityForResult(i, REQUEST_CODE);
                     }
                 }
@@ -130,28 +114,30 @@ public class MainActivity extends AppCompatActivity {
         // REQUEST_CODE is defined above
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
             // check if returned result is edit or delete request
-            String intent = data.getExtras().getString("intent");
-            if (intent != null && intent.equals("edit")) {
+            String mode = data.getExtras().getString("mode");
+            if (mode != null && mode.equals("edit")) {
                 // extract edited task value from result extras
-                String taskEdited = data.getExtras().getString("taskEdited");
+                Bundle bundle = data.getExtras();
+                Task taskData = bundle.getParcelable("task");
                 // update the view and the tasks file
                 if (create) {
-                    tasks.add(taskEdited);
+                    helper.addTask(taskData);
+                    tasks.add(taskData);
                     create = false;
                 } else {
-                    tasks.set(position, taskEdited);
+                    helper.updateTask(taskInitId, taskData);
+                    tasks.set(position, taskData);
                 }
-                tasksAdapter.notifyDataSetChanged();
-                writeTasks();
-            } else if (intent != null && intent.equals("delete")) {
+                Collections.sort(tasks, new CustomComparator());
+            } else if (mode != null && mode.equals("delete")) {
                 if (create) {
                     create = false;
                 } else {
                     tasks.remove(position);
-                    tasksAdapter.notifyDataSetChanged();
-                    writeTasks();
+                    helper.deleteTask(taskInitId);
                 }
             }
+            tasksAdapter.notifyDataSetChanged();
         }
     }
 }

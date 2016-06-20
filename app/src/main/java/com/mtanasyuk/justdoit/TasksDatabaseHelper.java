@@ -8,31 +8,28 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class TasksDatabaseHelper extends SQLiteOpenHelper {
 
-    private static final String TAG = "";
+    private static final String TAG = "DATABASE DEBUG";
     private static TasksDatabaseHelper sInstance;
 
     // Database Info
     private static final String DATABASE_NAME = "tasksDatabase";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
-    // Table Names
+    // Table Name
     private static final String TABLE_TASKS = "tasks";
 
     // Tasks Table Columns
     private static final String KEY_TASK_ID = "id";
     private static final String KEY_TASK_NAME = "name";
-    //private static final int KEY_TASK_DATE = 0;
     private static final String KEY_TASK_TEXT = "text";
     private static final String KEY_TASK_PRIORITY = "priority";
 
     public static synchronized TasksDatabaseHelper getInstance(Context context) {
-        // Use the application context, which will ensure that you
-        // don't accidentally leak an Activity's context.
+        // Use the application context, which will ensure that you don't accidentally leak an Activity's context.
         if (sInstance == null) {
             sInstance = new TasksDatabaseHelper(context.getApplicationContext());
         }
@@ -52,7 +49,6 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
-        db.setForeignKeyConstraintsEnabled(true);
     }
 
     // Called when the database is created for the FIRST time.
@@ -62,18 +58,19 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
         String CREATE_TASKS_TABLE = "CREATE TABLE " + TABLE_TASKS +
                 "(" +
                 KEY_TASK_ID + " INTEGER PRIMARY KEY," + // Define a primary key
-                KEY_TASK_NAME + " NAME," +
-                //KEY_TASK_DATE + " DATE,"  +
+                KEY_TASK_NAME + " TEXT," +
                 KEY_TASK_TEXT + " TEXT," +
-                KEY_TASK_PRIORITY + "PRIORITY" +
+                KEY_TASK_PRIORITY + " INTEGER" +
                 ")";
 
         db.execSQL(CREATE_TASKS_TABLE);
     }
 
-    // Called when the database needs to be upgraded.
-    // This method will only be called if a database already exists on disk with the same DATABASE_NAME,
-    // but the DATABASE_VERSION is different than the version of the database that exists on disk.
+    /**
+     * Called when the database needs to be upgraded.
+     * This method will only be called if a database already exists on disk with the same DATABASE_NAME,
+     * but the DATABASE_VERSION is different than the version of the database that exists on disk.
+     */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion != newVersion) {
@@ -83,98 +80,64 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Insert or update a task in the database
-    // Since SQLite doesn't support "upsert" we need to fall back on an attempt to UPDATE (in case the
-    // task already exists) optionally followed by an INSERT (in case the task does not already exist).
-    public long addOrUpdateTask(Task task) {
-        // The database connection is cached so it's not expensive to call getWriteableDatabase() multiple times.
-        SQLiteDatabase db = getWritableDatabase();
-        long taskId = -1;
+    // Insert a task into the database
+    public void addTask(Task task) {
 
+        // Create and/or open the database for writing
+        SQLiteDatabase db = getWritableDatabase();
+
+        // It's a good idea to wrap our insert in a transaction. This helps with performance and ensures
+        // consistency of the database.
         db.beginTransaction();
+
         try {
             ContentValues values = new ContentValues();
             values.put(KEY_TASK_NAME, task.taskName);
             values.put(KEY_TASK_TEXT, task.taskText);
-            values.put(KEY_TASK_PRIORITY, task.priority);
+            values.put(String.valueOf(KEY_TASK_PRIORITY), task.taskPriority);
 
-            // First try to update the task in case the task already exists in the database
-            // This assumes taskNames are unique
-            int rows = db.update(TABLE_TASKS, values, KEY_TASK_NAME + "= ?", new String[]{task.taskName});
+            // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
+            db.insertOrThrow(TABLE_TASKS, null, values);
+            db.setTransactionSuccessful();
 
-            // Check if update succeeded
-            if (rows == 1) {
-                // Get the primary key of the task we just updated
-                String taskSelectQuery = String.format("SELECT %s FROM %s WHERE %s = ?",
-                        KEY_TASK_ID, TABLE_TASKS, KEY_TASK_NAME);
-                Cursor cursor = db.rawQuery(taskSelectQuery, new String[]{String.valueOf(task.taskName)});
-                try {
-                    if (cursor.moveToFirst()) {
-                        taskId = cursor.getInt(0);
-                        db.setTransactionSuccessful();
-                    }
-                } finally {
-                    if (cursor != null && !cursor.isClosed()) {
-                        cursor.close();
-                    }
-                }
-            } else {
-                // task with this taskName did not already exist, so insert new task
-                taskId = db.insertOrThrow(TABLE_TASKS, null, values);
-                db.setTransactionSuccessful();
-            }
         } catch (Exception e) {
-            Log.d(TAG, "Error while trying to add or update task");
+            Log.d(TAG, "Error while trying to add task to database");
+
         } finally {
             db.endTransaction();
         }
-        return taskId;
     }
 
-    public List<Task> getAllTasks() {
-        List<Task> tasks = new ArrayList<>();
+    public ArrayList<Task> getAllTasks() {
+
+        ArrayList<Task> tasks = new ArrayList<>();
 
         // SELECT * FROM TASKS
         String TASKS_SELECT_QUERY = String.format("SELECT * FROM %s", TABLE_TASKS);
 
-        // "getReadableDatabase()" and "getWriteableDatabase()" return the same object (except under low
-        // disk space scenarios)
+
+        // "getReadableDatabase()" and "getWriteableDatabase()" return the same object (except under low disk space scenarios)
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.rawQuery(TASKS_SELECT_QUERY, null);
+
         try {
             if (cursor.moveToFirst()) {
                 do {
                     Task newTask = new Task();
                     newTask.taskName = cursor.getString(cursor.getColumnIndex(KEY_TASK_NAME));
                     newTask.taskText = cursor.getString(cursor.getColumnIndex(KEY_TASK_TEXT));
-                    newTask.priority = cursor.getString(cursor.getColumnIndex(KEY_TASK_PRIORITY));
+                    newTask.taskPriority = cursor.getInt(cursor.getColumnIndex(KEY_TASK_PRIORITY));
                     tasks.add(newTask);
 
                 } while(cursor.moveToNext());
             }
         } catch (Exception e) {
             Log.d(TAG, "Error while trying to get tasks from database");
+
         } finally {
-            if (cursor != null && !cursor.isClosed()) {
-                cursor.close();
-            }
+            if (cursor != null && !cursor.isClosed()) cursor.close();
         }
         return tasks;
-    }
-
-    // Update the task's name
-    public int updateTaskName(Task task) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(KEY_TASK_NAME, task.taskName);
-
-        // find the task
-
-
-        // Updating
-        return db.update(TABLE_TASKS, values, KEY_TASK_NAME + " = ?",
-                new String[] { String.valueOf(task.taskName) });
     }
 
     // Delete all tasks in the database
@@ -182,7 +145,6 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
         try {
-            // Order of deletions is important when foreign key relationships exist.
             db.delete(TABLE_TASKS, null, null);
             db.setTransactionSuccessful();
         } catch (Exception e) {
@@ -190,5 +152,69 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
         } finally {
             db.endTransaction();
         }
+    }
+
+    public long findTask(Task task) {
+        // The database connection is cached so it's not expensive to call getWriteableDatabase() multiple times.
+        SQLiteDatabase db = getWritableDatabase();
+        long taskId = -1;
+
+        db.beginTransaction();
+        // Get the primary key of the task
+        String taskSelectQuery = String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ? AND %s = ?",
+                    KEY_TASK_ID, TABLE_TASKS, KEY_TASK_NAME, KEY_TASK_TEXT, KEY_TASK_PRIORITY);
+        Cursor cursor = db.rawQuery(taskSelectQuery, new String[]{  String.valueOf(task.taskName),
+                                                                    String.valueOf(task.taskText),
+                                                                    String.valueOf(task.taskPriority)});
+        try {
+            if (cursor.moveToFirst()) {
+                taskId = cursor.getInt(0);
+                db.setTransactionSuccessful();
+            }
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+        }
+        db.endTransaction();
+        return taskId;
+    }
+
+    public void updateTask(Long taskInitId, Task taskData) {
+
+        // find task by id and update it
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+
+        try {
+            ContentValues values = new ContentValues();
+            values.put(KEY_TASK_NAME, taskData.taskName);
+            values.put(KEY_TASK_TEXT, taskData.taskText);
+            values.put(KEY_TASK_PRIORITY, taskData.taskPriority);
+            db.update(TABLE_TASKS, values, KEY_TASK_ID + "=" + taskInitId, null);
+            db.setTransactionSuccessful();
+
+        } catch (Exception e) {
+            Log.d(TAG, "Error while trying to update the task");
+        }
+
+        db.endTransaction();
+    }
+
+    public void deleteTask(Long taskInitId) {
+
+        // find task by id and delete it
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+
+        try {
+            db.delete(TABLE_TASKS, KEY_TASK_ID + "=" + taskInitId, null);
+            db.setTransactionSuccessful();
+
+        } catch (Exception e) {
+            Log.d(TAG, "Error while trying to delete the task");
+        }
+
+        db.endTransaction();
     }
 }

@@ -1,33 +1,65 @@
 package com.mtanasyuk.justdoit;
 
-import java.util.ArrayList;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Task {
+
+public class Task implements Parcelable {
 
     public String taskName;
-    //public Date dueDate;
     public String taskText;
-    public String priority;
+    public Integer taskPriority;
+    public Integer taskDay;
+    public Integer taskMonth;
+    public Integer taskYear;
 
     public Task() {
         this.taskName = "";
         this.taskText = "";
-        this.priority = "";
+        this.taskPriority = 0;
+        this.taskDay = 1;
+        this.taskMonth = 1;
+        this.taskYear = 2015;
     }
 
-    public Task(String name, String description, String priority) {
+    public Task(String name, String description, int priority, int day, int month, int year) {
         this.taskName = name;
-        //this.dueDate = date;
         this.taskText = description;
-        this.priority = priority;
+        this.taskPriority = priority;
+        this.taskDay = day;
+        this.taskMonth = month;
+        this.taskYear = year;
     }
 
-    public static ArrayList<Task> getTasks() {
-        ArrayList<Task> tasks = new ArrayList<>();
-        tasks.add(new Task("task1", "very important", "high"));
-        tasks.add(new Task("task2", "not very important", "med"));
-        tasks.add(new Task("task3", "not important", "low"));
-        return tasks;
+    protected Task(Parcel in) {
+        String[] data = new String[3];
+        in.readStringArray(data);
+        this.taskName = data[0];
+        this.taskText = data[1];
+        this.taskPriority = Integer.parseInt(data[2]);
     }
 
+    public static final Creator<Task> CREATOR = new Creator<Task>() {
+        @Override
+        public Task createFromParcel(Parcel in) {
+            return new Task(in);
+        }
+
+        @Override
+        public Task[] newArray(int size) {
+            return new Task[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeStringArray(new String[] {this.taskName,
+                                            this.taskText,
+                                            this.taskPriority.toString()});
+    }
 }
