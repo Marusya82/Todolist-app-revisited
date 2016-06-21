@@ -17,9 +17,9 @@ public class Task implements Parcelable {
         this.taskName = "";
         this.taskText = "";
         this.taskPriority = 0;
-        this.taskDay = 1;
-        this.taskMonth = 1;
-        this.taskYear = 2015;
+        this.taskDay = 21;
+        this.taskMonth = 5;
+        this.taskYear = 2016;
     }
 
     public Task(String name, String description, int priority, int day, int month, int year) {
@@ -32,11 +32,14 @@ public class Task implements Parcelable {
     }
 
     protected Task(Parcel in) {
-        String[] data = new String[3];
+        String[] data = new String[6];
         in.readStringArray(data);
         this.taskName = data[0];
         this.taskText = data[1];
         this.taskPriority = Integer.parseInt(data[2]);
+        this.taskDay = Integer.parseInt(data[3]);
+        this.taskMonth = Integer.parseInt(data[4]);
+        this.taskYear = Integer.parseInt(data[5]);
     }
 
     public static final Creator<Task> CREATOR = new Creator<Task>() {
@@ -60,6 +63,9 @@ public class Task implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeStringArray(new String[] {this.taskName,
                                             this.taskText,
-                                            this.taskPriority.toString()});
+                                            this.taskPriority.toString(),
+                                            this.taskDay.toString(),
+                                            this.taskMonth.toString(),
+                                            this.taskYear.toString()});
     }
 }

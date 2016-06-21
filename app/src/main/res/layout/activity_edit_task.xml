@@ -20,52 +20,65 @@
         <!--android:elevation="4dp"-->
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/tvTaskName"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="10dp"
         android:layout_below="@+id/my_toolbar"
         android:layout_alignParentLeft="true"
+        android:textStyle="bold"
         android:hint="@string/task_name"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/etEditTask"
+        android:layout_width="240dp"
+        android:layout_height="40dp"
         android:layout_below="@+id/my_toolbar"
+        android:layout_alignBottom="@id/tvTaskName"
         android:layout_alignParentRight="true"
         android:hint="@string/input_task_name"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
+        android:id="@+id/tvTaskPrior"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/tvTaskPrior"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="15dp"
         android:layout_below="@+id/tvTaskName"
         android:layout_alignParentLeft="true"
+        android:textStyle="bold"
         android:hint="@string/task_priority"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Spinner
         android:id="@+id/priority_spinner"
-        android:layout_width="wrap_content"
+        android:layout_marginTop="15dp"
+        android:layout_width="240dp"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
+        android:layout_alignBottom="@id/tvTaskPrior"
         android:layout_below="@+id/etEditTask"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/etEditDate"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="10dp"
         android:layout_below="@+id/tvTaskPrior"
         android:layout_alignParentLeft="true"
+        android:textStyle="bold"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:hint="@string/task_date" />
 
     <DatePicker
+        android:id="@+id/datePicker"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/datePicker"
         android:layout_below="@+id/priority_spinner"
         android:layout_alignParentRight="true"
         android:calendarViewShown="false" />

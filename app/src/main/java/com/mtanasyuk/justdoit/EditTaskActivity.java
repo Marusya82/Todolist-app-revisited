@@ -22,7 +22,7 @@ public class EditTaskActivity extends AppCompatActivity implements CustomAlertLi
     Bundle data;
     Task task;
     Spinner spinner;
-//    DatePicker datePicker;
+    DatePicker datePicker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +39,7 @@ public class EditTaskActivity extends AppCompatActivity implements CustomAlertLi
 
         // get a handle to the fields and set the data
         etEditTask = (EditText) findViewById(R.id.etEditTask);
-//        datePicker = (DatePicker) findViewById(R.id.datePicker);
+        datePicker = (DatePicker) findViewById(R.id.datePicker);
 
         // set the spinner to custom predefined choices
         spinner = (Spinner) findViewById(R.id.priority_spinner);
@@ -48,10 +48,11 @@ public class EditTaskActivity extends AppCompatActivity implements CustomAlertLi
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
 
-        if (etEditTask != null & spinner != null) {
+        if (etEditTask != null & spinner != null & datePicker != null) {
             etEditTask.setText(task.taskName);
             etEditTask.setSelection(task.taskName.length());
-//            datePicker.updateDate(task.taskYear, task.taskMonth, task.taskDay);
+            spinner.setSelection(task.taskPriority);
+            datePicker.updateDate(task.taskYear, task.taskMonth, task.taskDay);
         }
     }
 
@@ -85,6 +86,9 @@ public class EditTaskActivity extends AppCompatActivity implements CustomAlertLi
                         task.taskPriority = 2;
                         break;
                 }
+                task.taskDay = datePicker.getDayOfMonth();
+                task.taskMonth = datePicker.getMonth();
+                task.taskYear = datePicker.getYear();
                 // pass relevant data back as a result
                 data.putExtra("mode", "edit");
                 data.putExtra("task", task);

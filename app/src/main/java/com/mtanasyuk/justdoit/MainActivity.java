@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         // get db instance and construct the data source
         helper = TasksDatabaseHelper.getInstance(this);
+//        helper.deleteAll();;
         tasks = helper.getAllTasks();
 
         // sort all tasks based on its priority

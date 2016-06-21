@@ -17,7 +17,7 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
 
     // Database Info
     private static final String DATABASE_NAME = "tasksDatabase";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     // Table Name
     private static final String TABLE_TASKS = "tasks";
@@ -27,6 +27,10 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
     private static final String KEY_TASK_NAME = "name";
     private static final String KEY_TASK_TEXT = "text";
     private static final String KEY_TASK_PRIORITY = "priority";
+    private static final String KEY_TASK_DAY = "day";
+    private static final String KEY_TASK_MONTH = "month";
+    private static final String KEY_TASK_YEAR = "year";
+
 
     public static synchronized TasksDatabaseHelper getInstance(Context context) {
         // Use the application context, which will ensure that you don't accidentally leak an Activity's context.
@@ -60,7 +64,10 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
                 KEY_TASK_ID + " INTEGER PRIMARY KEY," + // Define a primary key
                 KEY_TASK_NAME + " TEXT," +
                 KEY_TASK_TEXT + " TEXT," +
-                KEY_TASK_PRIORITY + " INTEGER" +
+                KEY_TASK_PRIORITY + " INTEGER," +
+                KEY_TASK_DAY + " INTEGER," +
+                KEY_TASK_MONTH + " INTEGER," +
+                KEY_TASK_YEAR + " INTEGER" +
                 ")";
 
         db.execSQL(CREATE_TASKS_TABLE);
@@ -95,6 +102,9 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
             values.put(KEY_TASK_NAME, task.taskName);
             values.put(KEY_TASK_TEXT, task.taskText);
             values.put(String.valueOf(KEY_TASK_PRIORITY), task.taskPriority);
+            values.put(String.valueOf(KEY_TASK_DAY), task.taskDay);
+            values.put(String.valueOf(KEY_TASK_MONTH), task.taskMonth);
+            values.put(String.valueOf(KEY_TASK_YEAR), task.taskYear);
 
             // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
             db.insertOrThrow(TABLE_TASKS, null, values);
@@ -127,6 +137,9 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
                     newTask.taskName = cursor.getString(cursor.getColumnIndex(KEY_TASK_NAME));
                     newTask.taskText = cursor.getString(cursor.getColumnIndex(KEY_TASK_TEXT));
                     newTask.taskPriority = cursor.getInt(cursor.getColumnIndex(KEY_TASK_PRIORITY));
+                    newTask.taskDay = cursor.getInt(cursor.getColumnIndex(KEY_TASK_DAY));
+                    newTask.taskMonth = cursor.getInt(cursor.getColumnIndex(KEY_TASK_MONTH));
+                    newTask.taskYear = cursor.getInt(cursor.getColumnIndex(KEY_TASK_YEAR));
                     tasks.add(newTask);
 
                 } while(cursor.moveToNext());
@@ -161,11 +174,15 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
 
         db.beginTransaction();
         // Get the primary key of the task
-        String taskSelectQuery = String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ? AND %s = ?",
-                    KEY_TASK_ID, TABLE_TASKS, KEY_TASK_NAME, KEY_TASK_TEXT, KEY_TASK_PRIORITY);
+        String taskSelectQuery = String.format("SELECT %s FROM %s WHERE %s = ? AND %s = ? AND %s = ? AND %s = ? AND %s = ? AND %s = ?",
+                    KEY_TASK_ID, TABLE_TASKS, KEY_TASK_NAME, KEY_TASK_TEXT, KEY_TASK_PRIORITY,
+                    KEY_TASK_DAY, KEY_TASK_MONTH, KEY_TASK_YEAR);
         Cursor cursor = db.rawQuery(taskSelectQuery, new String[]{  String.valueOf(task.taskName),
                                                                     String.valueOf(task.taskText),
-                                                                    String.valueOf(task.taskPriority)});
+                                                                    String.valueOf(task.taskPriority),
+                                                                    String.valueOf(task.taskDay),
+                                                                    String.valueOf(task.taskMonth),
+                                                                    String.valueOf(task.taskYear)});
         try {
             if (cursor.moveToFirst()) {
                 taskId = cursor.getInt(0);
@@ -191,6 +208,9 @@ public class TasksDatabaseHelper extends SQLiteOpenHelper {
             values.put(KEY_TASK_NAME, taskData.taskName);
             values.put(KEY_TASK_TEXT, taskData.taskText);
             values.put(KEY_TASK_PRIORITY, taskData.taskPriority);
+            values.put(KEY_TASK_DAY, taskData.taskDay);
+            values.put(KEY_TASK_MONTH, taskData.taskMonth);
+            values.put(KEY_TASK_YEAR, taskData.taskYear);
             db.update(TABLE_TASKS, values, KEY_TASK_ID + "=" + taskInitId, null);
             db.setTransactionSuccessful();
 
