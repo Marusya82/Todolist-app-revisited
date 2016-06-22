@@ -1,6 +1,6 @@
-### Pre-work - *Justdoit*
+### Pre-work - *My to-do list*
 
-**Justdoit** is an android app that allows building a todo list and basic todo items management functionality including adding new items, editing and deleting an existing item.
+**My to-do list** is an android app that allows building a todo list and basic todo items management functionality including adding new items, editing and deleting an existing item.
 
 Submitted by: **Marina Tanasyuk**
 
