@@ -11,38 +11,54 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class CustomTasksAdapter extends ArrayAdapter<Task> {
+
+    private static class ViewHolder {
+        TextView vhName;
+        TextView vhPriority;
+    }
+
     public CustomTasksAdapter(Context context, ArrayList<Task> arrayOfTasks) {
         super(context, 0, arrayOfTasks);
     }
 
+    // Returns the actual view used as a row within ListView at a particular position
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
         // Get the data item for this position
         Task task = getItem(position);
 
+        ViewHolder viewHolder;
+
         // Check if an existing view is being reused, otherwise inflate the view
         if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_task_main, parent, false);
+
+            viewHolder = new ViewHolder();
+            LayoutInflater inflater = LayoutInflater.from(getContext());
+            convertView = inflater.inflate(R.layout.item_task_main, parent, false);
+
+            // Lookup view for data population
+            viewHolder.vhName = (TextView) convertView.findViewById(R.id.tvTaskName);
+            viewHolder.vhPriority = (TextView) convertView.findViewById(R.id.tvTaskPrior);
+            convertView.setTag(viewHolder);
+
+        } else {
+            viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        // Lookup view for data population
-        TextView taskName = (TextView) convertView.findViewById(R.id.tvTaskName);
-        TextView taskPrior = (TextView) convertView.findViewById(R.id.tvTaskPrior);
-
-        // Populate the data into the template view using the data object
+        // populate data into the template view using the data object
+        viewHolder.vhName.setText(task.taskName);
         Integer priority = task.taskPriority;
-        taskName.setText(task.taskName);
 
         switch(priority) {
-            case 0: taskPrior.setText("HIGH");
-                taskPrior.setTextColor(Color.RED);
+            case 0: viewHolder.vhPriority.setText("HIGH");
+                viewHolder.vhPriority.setTextColor(Color.RED);
                 break;
-            case 1: taskPrior.setText("MEDIUM");
-                taskPrior.setTextColor(Color.BLUE);
+            case 1: viewHolder.vhPriority.setText("MEDIUM");
+                viewHolder.vhPriority.setTextColor(Color.BLUE);
                 break;
-            case 2: taskPrior.setText("LOW");
-                taskPrior.setTextColor(Color.GREEN);
+            case 2: viewHolder.vhPriority.setText("LOW");
+                viewHolder.vhPriority.setTextColor(Color.GREEN);
                 break;
         }
 
