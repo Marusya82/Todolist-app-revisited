@@ -26,6 +26,7 @@ The following **optional** features are implemented:
 The following **additional** features are implemented:
 
 * [x] To-do items are sorted by priority
+* [x] Improved performance by adding ViewHolder to the custom adapter
 
 ##### Video Walkthrough 
 
